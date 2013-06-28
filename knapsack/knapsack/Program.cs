@@ -19,17 +19,30 @@ namespace knapsack
                                                "ks_50_1",
                                                "ks_60_0",
                                                "ks_100_0",
-                                               "ks_100_1",
+                                               //"ks_100_1",
                                                "ks_100_2",
                                                "ks_200_0",
-                                               "ks_200_1",
-                                               "ks_300_0",
-                                               "ks_400_0",
-                                               "ks_500_0",
-                                               "ks_1000_0",
-                                               "ks_10000_0"
+                                               //"ks_200_1",
+                                               //"ks_300_0",
+                                               //"ks_400_0",
+                                               //"ks_500_0",
+                                               //"ks_1000_0",
+                                               //"ks_10000_0"
                                            };
         static void Main(string[] args)
+        {
+            //NormalRun(args);
+            TestRun(args);
+        }
+
+        private static void NormalRun(string[] args)
+        {
+            ParseInput(string.Format(args[0]));
+            kp.FillCells();
+            Console.Write(kp.Solution());
+        }
+
+        private static void TestRun(string[] args)
         {
             Directory.CreateDirectory("./tempData");
             foreach (var d in data)
@@ -38,11 +51,11 @@ namespace knapsack
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
 
-                ParseInput(string.Format(@"{0}{1}",args[0],d));
+                ParseInput(string.Format(@"{0}{1}", args[0], d));
 
                 sw.Stop();
                 var parsing = sw.Elapsed;
-                Console.WriteLine("parse take {0}",parsing);
+                Console.WriteLine("parse take {0}", parsing);
 
                 sw.Reset();
                 sw.Start();
@@ -68,6 +81,7 @@ namespace knapsack
 
                 kp.Dispose();
             }
+            Console.ReadKey();
         }
 
         private static void ParseInput(string filePath)

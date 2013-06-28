@@ -60,7 +60,7 @@ namespace knapsack
             int newValue = values[tempRow, column] + currentElement.Value;
             int previousValue = values[row, column];
 
-            return previousValue >= newValue 
+            return (previousValue >= newValue) 
                 ? previousValue 
                 : newValue;
         }
