@@ -44,7 +44,6 @@ namespace knapsack
 
         private static void TestRun(string[] args)
         {
-            Directory.CreateDirectory("./tempData");
             foreach (var d in data)
             {
                 Console.WriteLine(d);
