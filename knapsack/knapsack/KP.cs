@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -13,8 +12,11 @@ namespace knapsack
             _capacity = capacity;
             _elementsCount = elements.Length;
 
-            previousCollumn = new int[capacity + 1];
-            currentCollumn = new int[capacity + 1];
+            previousColumn = new int[capacity + 1];
+            currentColumn = new int[capacity + 1];
+
+            maxIndex = 0;
+            maxValue = 0;
 
             Directory.CreateDirectory("./tempData");
         }
@@ -23,38 +25,45 @@ namespace knapsack
         private readonly int _capacity;
         private XElement[] _elements;
 
-        private int[] previousCollumn;
-        private int[] currentCollumn;
+        private int[] previousColumn;
+        private int[] currentColumn;
+
+        private int maxValue;
+        private int maxIndex;
+
+        #region Filling
 
         public void FillCells()
         {
             for (int i = 1; i < _elementsCount + 1; i++)
             {
                 var str = new FileStream(string.Format("./tempData/temp{0}", i), FileMode.Create, FileAccess.Write);
-                using (var sw = new StreamWriter(str))
+                var sw = new StreamWriter(str);
+
+                if (_elements[i - 1].Weight > _capacity || _elements[i - 1].Value == 0)
                 {
-                    if (_elements[i - 1].Weight > _capacity || _elements[i - 1].Value == 0)
-                    {
-                        CopyPrevious();
-                    }
-                    else
-                    {
-                        for (int j = 1; j < _capacity + 1; j++)
-                        {
-                            FillCurrentCell(i, j);
-                        }
-                    }
-                    sw.Write(string.Join(" ", currentCollumn));
-                    previousCollumn = currentCollumn;
-                    currentCollumn = new int[_capacity + 1];
+                    CopyPrevious();
                 }
+                else
+                {
+                    for (int j = 1; j < _capacity + 1; j++)
+                    {
+                        FillCurrentCell(i, j);
+                    }
+                }
+                sw.Write(string.Join(" ", currentColumn));
+                previousColumn = currentColumn;
+                currentColumn = new int[_capacity + 1];
+
+                sw.Close();
+                str.Close();
             }
         }
 
         private void CopyPrevious()
         {
-            currentCollumn = previousCollumn;
-            previousCollumn = null;
+            currentColumn = previousColumn;
+            previousColumn = null;
         }
 
         private void FillCurrentCell(int column, int row)
@@ -62,11 +71,11 @@ namespace knapsack
             int prevColumnIndex = column - 1;
             if (_elements[prevColumnIndex].Weight > row)
             {
-                currentCollumn[row] = previousCollumn[row];
+                currentColumn[row] = previousColumn[row];
             }
             else
             {
-                currentCollumn[row] = GetBestValue(prevColumnIndex, row);
+                currentColumn[row] = GetBestValue(prevColumnIndex, row);
             }
         }
 
@@ -77,74 +86,103 @@ namespace knapsack
                               ? row - currentElement.Weight
                               : 0;
 
-            int newValue = previousCollumn[tempRow] + currentElement.Value;
-            int previousValue = previousCollumn[row];
+            int newValue = previousColumn[tempRow] + currentElement.Value;
+            int previousValue = previousColumn[row];
+
+            if(newValue > maxValue)
+            {
+                maxValue = newValue;
+                maxIndex = column;
+            }
 
             return (previousValue >= newValue)
                        ? previousValue
                        : newValue;
         }
 
+        #endregion
+
+        #region Solution
+
         public string Solution()
         {
-            //int maxValue = 0;
-            //int maxIndex = 0;
-            //for (int i = 1; i < _elementsCount + 1; i++)
-            //{
-            //    int currentValue = values[_capacity, i];
-            //    if (maxValue < currentValue)
-            //    {
-            //        maxValue = currentValue;
-            //        maxIndex = i - 1;
-            //    }
-            //}
+            XElement maxElement = _elements[maxIndex];
+            maxElement.IsIncluded = true;
 
-            //XElement maxElement = _elements[maxIndex];
-            //maxElement.IsIncluded = true;
+            MarkNext(FindLastColumnChange() - maxElement.Weight, maxIndex);
 
-            //MarkNext(FindLastColumnChange(maxIndex + 1) - maxElement.Weight, maxIndex);
+            string els = string.Join(" ", _elements.Select(i => i.IsIncluded
+                                                                    ? 1
+                                                                    : 0));
 
-            //string els = string.Join(" ", _elements.Select(i => i.IsIncluded
-            //                                                        ? 1
-            //                                                        : 0));
-
-            //return string.Format("{0} {1}{2}{3}", maxValue, 0, Environment.NewLine, els);
-            return "";
+            return string.Format("{0} {1}{2}{3}", maxValue, 1, Environment.NewLine, els);
         }
 
-        private int FindLastColumnChange(int maxIndex)
+        private int FindLastColumnChange()
         {
-            //for (int i = _capacity; i > 1; i--)
-            //{
-            //    if (values[i, maxIndex] != values[i - 1, maxIndex])
-            //    {
-            //        return i;
-            //    }
-            //}
+            string[] values = GetColumnElements(maxIndex + 1);
+            for (int i = _capacity; i > 1; i--)
+            {
+                if (values[i] != values[i - 1])
+                {
+                    return i;
+                }
+            }
             return 0;
         }
 
         private void MarkNext(int currentWeight, int currentIndex)
         {
-            //if (values[currentWeight, currentIndex - 1] == values[currentWeight, currentIndex])
-            //{
-            //    MarkNext(currentWeight, currentIndex - 1);
-            //}
-            //else
-            //{
-            //    var element = _elements[currentIndex - 1];
-            //    element.IsIncluded = true;
-            //    if (currentWeight > element.Weight && currentIndex > 1)
-            //        MarkNext(currentWeight - element.Weight, currentIndex - 1);
-            //}
+            string[] prevCol = GetColumnElements(currentIndex - 1);
+            string[] curCol = GetColumnElements(currentIndex);
+            
+            if (prevCol[currentWeight] == curCol[currentWeight])
+            {
+// ReSharper disable RedundantAssignment
+                prevCol = null;
+                curCol = null;
+// ReSharper restore RedundantAssignment
+                MarkNext(currentWeight, currentIndex - 1);
+            }
+            else
+            {
+                var element = _elements[currentIndex - 1];
+                element.IsIncluded = true;
+                if (currentWeight > element.Weight && currentIndex > 1)
+                    MarkNext(currentWeight - element.Weight, currentIndex - 1);
+            }
         }
+
+        #endregion
+
+        #region Helpers
+
+        private static string[] GetColumnElements(int index)
+        {
+            var str = new FileStream(string.Format("./tempData/temp{0}", index), FileMode.Open, FileAccess.Read);
+            
+                var sr = new StreamReader(str);
+                // ReSharper disable PossibleNullReferenceException
+                string[] curCol = sr.ReadLine().Split(' ');
+                // ReSharper restore PossibleNullReferenceException
+            
+            sr.Close();
+            str.Close();
+            return curCol;
+        }
+
+        #endregion
+
+        #region Dispose
 
         public void Dispose()
         {
             Directory.Delete("./TempData",true);
             _elements = null;
-            previousCollumn = null;
-            currentCollumn = null;
+            previousColumn = null;
+            currentColumn = null;
         }
+
+        #endregion
     }
 }
