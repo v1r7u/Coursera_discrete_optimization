@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace knapsack
 {
     class Program
     {
-        private static KnapsackProcessor kp;
+        private static KP kp;
         private static string[] data = new []
                                            {
                                                "ks_4_0",
@@ -35,6 +31,7 @@ namespace knapsack
                                            };
         static void Main(string[] args)
         {
+            Directory.CreateDirectory("./tempData");
             foreach (var d in data)
             {
                 Console.WriteLine(d);
@@ -68,6 +65,8 @@ namespace knapsack
                 Console.WriteLine(solution);
                 Console.WriteLine();
                 sw.Reset();
+
+                kp.Dispose();
             }
         }
 
@@ -89,7 +88,7 @@ namespace knapsack
                     elements[i] = new XElement(val, weight);
                 }
 
-                kp = new KnapsackProcessor(elements, K);
+                kp = new KP(elements, K);
             }
             str.Close();
         }
