@@ -7,7 +7,7 @@ namespace knapsack
 {
     class Program
     {
-        private static KP kp;
+        private static KnapsackProcessor _knapsackProcessor;
         private static string[] data = new []
                                            {
                                                "ks_4_0",
@@ -38,8 +38,8 @@ namespace knapsack
         private static void NormalRun(string[] args)
         {
             ParseInput(string.Format(args[0]));
-            kp.FillCells();
-            Console.Write(kp.Solution());
+            _knapsackProcessor.FillCells();
+            Console.Write(_knapsackProcessor.Solution());
         }
 
         private static void TestRun(string[] args)
@@ -59,7 +59,7 @@ namespace knapsack
                 sw.Reset();
                 sw.Start();
 
-                kp.FillCells();
+                _knapsackProcessor.FillCells();
 
                 sw.Stop();
                 var filling = sw.Elapsed;
@@ -68,7 +68,7 @@ namespace knapsack
                 sw.Reset();
                 sw.Start();
 
-                string solution = kp.Solution();
+                string solution = _knapsackProcessor.Solution();
 
                 sw.Stop();
                 var buildingResult = sw.Elapsed;
@@ -78,7 +78,7 @@ namespace knapsack
                 Console.WriteLine();
                 sw.Reset();
 
-                kp.Dispose();
+                _knapsackProcessor.Dispose();
             }
             Console.ReadKey();
         }
@@ -101,7 +101,7 @@ namespace knapsack
                     elements[i] = new XElement(val, weight);
                 }
 
-                kp = new KP(elements, K);
+                _knapsackProcessor = new KnapsackProcessor(elements, K);
             }
             str.Close();
         }
