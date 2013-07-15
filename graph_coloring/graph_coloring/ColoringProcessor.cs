@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace graph_coloring
@@ -18,23 +19,44 @@ namespace graph_coloring
 
         public void ColorGraph()
         {
-            int[] vertexColors1 = new int[] { 0, 1, 0, 0 };
-            int[] vertexColors2 = new int[] { 0, 1, 1, 0 };
-            int[] vertexColors3 = new int[] { 0, 1, 0, 2 };
-            bool checkConstraints1 = CheckConstraints(vertexColors1);
-            bool checkConstraints2 = CheckConstraints(vertexColors2);
-            bool checkConstraints3 = CheckConstraints(vertexColors3);
+            var enumerable = GetCombinations(GetInitialArray(), _vertexNumber);
+            foreach (var colors in enumerable)
+            {
+                if(CheckConstraints(colors))
+                {
+                    _bestColors = colors.ToArray();
+                    return;
+                }
+            }
         }
 
         public string FormatAnswer()
         {
-            int colorsCount = _bestColors.Max();
+            int colorsCount = _bestColors.Max() + 1;
             return string.Format("{0} {1}{2}{3}", colorsCount, 0, Environment.NewLine, string.Join(" ", _bestColors));
         }
 
-        private bool CheckConstraints(int[] colors)
+        private bool CheckConstraints(IEnumerable<int> colors)
         {
-            return _nodes.All(t => colors[t.Vertex1] != colors[t.Vertex2]);
+            return _nodes.All(t => colors.ElementAt(t.Vertex1) != colors.ElementAt(t.Vertex2));
+        }
+
+        private IEnumerable<int> GetInitialArray()
+        {
+            int[] initial = new int[_vertexNumber];
+            for (int i = 0; i < _vertexNumber; i++)
+            {
+                initial[i] = i;
+            }
+            return initial;
+        }
+
+        private IEnumerable<IEnumerable<int>> GetCombinations(IEnumerable<int> list, int length)
+        {
+            if (length == 1) return list.Select(i => new int[] {i});
+
+            return GetCombinations(list, length - 1)
+                .SelectMany(i => list, (i1, i2) => i1.Concat(new int[] {i2}));
         }
     }
 }
